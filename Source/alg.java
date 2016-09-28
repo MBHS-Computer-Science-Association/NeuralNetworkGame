@@ -9,11 +9,9 @@ public class alg {
 	boolean a = true;
 	oi c = new oi();
 	int[] feedback = new int[10];
-	Map<Integer, Integer> aaa = new HashMap();
-	Map<Integer, Integer> bbb = new HashMap();
 	int[][] array = new int[100][100];
 	Random rand = new Random();
-
+	String s = "";
 	public alg(int a, int b, int c, int d) {
 		ax = a;
 		ay = b;
@@ -23,9 +21,6 @@ public class alg {
 
 	public void bot() {
 		ao = 0;
-		int w = 100;
-		int h = 100;
-		aaa.put(ax, ay);
 		array[ax][ay] = 1;
 		for (int i = 0; i < 20; i++) {
 			ax++;
@@ -63,7 +58,9 @@ public class alg {
 		}
 		while (a) {
 			int attempts = 0;
+			ro();
 			or: if (array[ax][ay] == 2) {
+				rr();
 				if (ao == 3) {
 					ao = 0;
 				} else {
@@ -71,20 +68,26 @@ public class alg {
 				}
 				if (attempts == 3) {
 					a = false;
+					s ="n";
 				}
 				attempts++;
+				ro();
 				break or;
 				// Control crashes into NN
 			} else if (array[ax][ay] == 1) {
+				rr();
 				if (ao == 3) {
 					ao = 0;
 				} else {
 					ao++;
 				}
 				if (attempts == 3) {
+					rr();
+					s="s";
 					a = false;
 				}
 				attempts++;
+				ro();
 				break or;
 				// COntrol crashes into Self
 			} else if (ax == 0 | ay == 0 | ax == 100 | ay == 100) {
@@ -96,26 +99,51 @@ public class alg {
 				}
 				if (attempts == 3) {
 					a = false;
+					s="w";
 				}
 				attempts++;
+				ro();
 				break or;
-			} else {
-				switch (ao) {
-				case 0:
-					ay++;
-					break;
-				case 1:
-					ax++;
-				case 2:
-					ay--;
-				case 3:
-					ax--;
-				}
 			}
 		}
 
 	}
-	public void NN(){
+
+	public void ro() {
+		switch (ao) {
+		case 0:
+			ay++;
+			break;
+		case 1:
+			ax++;
+			break;
+		case 2:
+			ay--;
+			break;
+		case 3:
+			ax--;
+			break;
+		}
+	}
+
+	public void rr() {
+		switch (ao) {
+		case 0:
+			ay--;
+			break;
+		case 1:
+			ax--;
+			break;
+		case 2:
+			ay++;
+			break;
+		case 3:
+			ax++;
+			break;
+		}
+	}
+
+	public void NN() {
 
 	}
 
@@ -141,34 +169,40 @@ public class alg {
 			if (array[x][y] == 1) {
 				// NN crashes into control
 				a = false;
+				s ="n";
 				return false;
 			}
 			if (array[x][y] == 2) {
 				// NN crashes into self
 				a = false;
+				s="s";
 				return false;
 
 			}
 			if (bx == 0 | by == 0 | bx == 100 | by == 100) {
 				// 3 = wall/border
 				a = false;
+				s="w";
 				return false;
 			}
 		}
 		if (b == 1) {
 			if (array[x][y] == 2) {
 				a = false;
+				s ="n";
 				// Control crashes into NN
 				return false;
 			}
 			if (array[x][y] == 1) {
 				a = false;
 				// COntrol crashes into Self
+				s="s";
 				return false;
 			}
 			if (ax == 0 | ay == 0 | ax == 100 | ay == 100) {
 				// 3 = wall/border
 				a = false;
+				s="w";
 				return false;
 			}
 		}
