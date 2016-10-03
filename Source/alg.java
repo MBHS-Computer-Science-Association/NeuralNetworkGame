@@ -18,7 +18,9 @@ public class alg {
 		bx = c;
 		by = d;
 	}
-
+	public boolean bcheck(){
+		return a;
+	}
 	public void bot() {
 		ao = 0;
 		array[ax][ay] = 1;
@@ -163,8 +165,7 @@ public class alg {
 		return by;
 	}
 
-	public boolean check(int b, int x, int y) {// 0 = empty 1 = bot/red 2 =
-												// nn/blue
+	public boolean check(int b, int x, int y) {// 0 = empty 1 = bot/red 2 = nn/blue
 		if (b == 2) {
 			if (array[x][y] == 1) {
 				// NN crashes into control

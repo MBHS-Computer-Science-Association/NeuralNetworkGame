@@ -24,7 +24,12 @@ public class main extends JPanel {
 		by = 50;
 		g.setColor(Color.red);
 		alg a = new alg(ax, ay, bx, by);
-
+		a.bot();
+		while(a.bcheck()){
+			g.paintRect(ax,ay,1,1);
+			ax = a.getax;
+			ay = a.getay;
+		}
 	}
 
 }
