@@ -43,16 +43,11 @@ public class NEAT {
 	 */
 	public List<float[]> genes = new ArrayList<>();
 
-	float numGeneID = 0; // incremented by one each time a gene is added to the
-							// repository
-
 	/**
 	 * List of Nodes, Each node has these fields in this order initial start,
 	 * initial end
 	 */
 	public List<float[]> nodes = new ArrayList<>();
-	float numNodeID = 1; // Increments by one each time a node is added to the
-							// repository
 
 	/**
 	 * The coefficients for the distance function
@@ -84,6 +79,7 @@ public class NEAT {
 	public float weightMutationRate = 0.8f; // change one gene will mutate
 	public float newWeightRate = 0.1f; // change that the mutated gene will be
 										// assigned a new value
+	public float weightChangeRate = 0.05f; // rate at which weights are changed
 	public float inheritedOfDisabledGeneActivated = 0.25f; // chance that an
 															// inherited
 															// disabled gene
@@ -154,12 +150,13 @@ public class NEAT {
 		int i = 1;
 		for (int s = 0; s < inputWidth; s++) {
 			for (int e = 0; e < outputWidth; e++) {
+				float geneID = getGeneID();
 				float[] gene = new float[2];
 				gene[0] = s + 1;
 				gene[1] = inputWidth + 1 + e;
 				genes.add(gene);
 				gene = new float[3];
-				gene[0] = getGeneID();
+				gene[0] = geneID; // added new gene first so can't condense here
 				gene[1] = 1.0f;
 				gene[2] = enabled;
 				adam[i++] = gene;
@@ -206,27 +203,27 @@ public class NEAT {
 	/**
 	 * Returns distance between two networks
 	 * 
-	 * @param floats
+	 * @param net1
 	 *            First Network
-	 * @param floats2
+	 * @param net2
 	 *            Second Network
 	 * @return distance between them
 	 */
-	public float delta(Float[][] floats, Float[][] floats2) {
+	public float delta(Float[][] net1, Float[][] net2) {
 		float E = 0;
 		float D = 0;
 		float W = 0;
 		float N = 1;
-		if (!(floats.length < cutoffN && floats2.length < cutoffN)) {
-			N = Math.max(floats.length, floats2.length);
+		if (!(net1.length < cutoffN && net2.length < cutoffN)) {
+			N = Math.max(net1.length, net2.length);
 		}
 		int ia = 1;
 		int ib = 1;
-		while (ia < floats.length && ib < floats2.length) {
-			float na = floats[ia][0];
-			float nb = floats2[ib][0];
+		while (ia < net1.length && ib < net2.length) {
+			float na = net1[ia][0];
+			float nb = net2[ib][0];
 			if (na == nb) {
-				W += abs(floats[ia][1] - floats2[ib][1]);
+				W += abs(net1[ia][1] - net2[ib][1]);
 				ia++;
 				ib++;
 			} else if (na < nb) {
@@ -237,10 +234,10 @@ public class NEAT {
 				ib++;
 			}
 		}
-		if (ia < floats.length) {
-			E += floats.length - ia;
-		} else if (ib < floats2.length) {
-			E += floats2.length - ib;
+		if (ia < net1.length) {
+			E += net1.length - ia;
+		} else if (ib < net2.length) {
+			E += net2.length - ib;
 		}
 		return delta(E, D, W, N);
 	}
@@ -415,10 +412,22 @@ public class NEAT {
 			}
 		}
 
+		// Modifies weight
+		if (randy.nextFloat() < weightMutationRate) {
+			for (int g = 1; g < c.length; g++) {
+				Float[] gene = c[g];
+				if (randy.nextFloat() < newWeightRate) {
+					gene[1] = randWeight();
+				} else {
+					gene[1] = gene[1] + (randy.nextBoolean() ? 1 : -1) * weightChangeRate;
+				}
+			}
+		}
+
 		// Adds a new Node
 		if (randy.nextFloat() < newNodeRate) {
-			int start = rand(1, c[0].length);
-			int end = rand(1, c[0].length);
+			Float start = c[0][rand(1, c[0].length - 1)];
+			Float end = c[0][rand(1, c[0].length - 1)];
 			float nodeID = -1f;
 
 			found: for (int i = 1; i < c.length; i++) {
@@ -469,18 +478,18 @@ public class NEAT {
 			}
 
 			// adds node to the array of nodes
-			float[] newFirstLayer = new float[c[0].length + 1];
+			Float[] newFirstLayer = new Float[c[0].length + 1];
 			for (int i = 0; i < c[0].length; i++) {
 				newFirstLayer[i] = c[0][i];
 			}
 			newFirstLayer[newFirstLayer.length - 1] = nodeID;
 
-			float[][] c2 = new float[c.length + 2][0];
+			Float[][] c2 = new Float[c.length + 2][0];
 			c2[0] = newFirstLayer;
 			float oldWeight = 1.0f;
 			for (int i = 1; i < c.length; i++) {
 				// index, weight, enabled
-				float[] copyGene = new float[3];
+				Float[] copyGene = new Float[3];
 				copyGene[0] = c[i][0];
 				copyGene[1] = c[i][1];
 				copyGene[2] = c[i][2];
@@ -497,19 +506,42 @@ public class NEAT {
 			firstAddedGene[0] = (float) firstLinkID;
 			firstAddedGene[1] = newLeadingNodeWeight;
 			firstAddedGene[2] = enabled;
-			c[c.length - 2] = firstAddedGene;
+			c2[c2.length - 2] = firstAddedGene;
 
 			Float[] lastAddedGene = new Float[3];
 			lastAddedGene[0] = (float) lastLinkID;
 			lastAddedGene[1] = oldWeight;
 			lastAddedGene[2] = enabled;
-			c[c.length - 1] = lastAddedGene;
+			c2[c2.length - 1] = lastAddedGene;
+
+			c = c2;
 		}
 
 		// TODO: Add large network support
-		if (randy.nextFloat() < smallNewLinkRate) {
-			int start = rand(1, c[0].length - 1);
-			int end = rand(1, c[0].length - 1);
+		addGene: if (randy.nextFloat() < smallNewLinkRate) {
+			List<Float[]> possNewGenes = new ArrayList<>();
+			for (int s = 1; s < c[0].length; s++) {
+				for (int e = 1; e < c[0].length; e++) {
+					for (int g = 1; g < c.length; g++) {
+						Float[] dna = c[g];
+						float[] gene = genes.get(dna[0].intValue());
+						if (!(s == gene[0] && e == gene[1])) {
+							Float[] possNewGene = new Float[2];
+							possNewGene[0] = (float) s;
+							possNewGene[1] = (float) e;
+							possNewGenes.add(possNewGene);
+						}
+					}
+				}
+			}
+
+			if (possNewGenes.size() == 0) {
+				break addGene;
+			}
+
+			int possNewGeneIndex = rand(1, possNewGenes.size() - 1);
+			float start = possNewGenes.get(possNewGeneIndex)[0];
+			float end = possNewGenes.get(possNewGeneIndex)[1];
 			float weight = randWeight();
 			int geneID = -1;
 
@@ -528,6 +560,7 @@ public class NEAT {
 				newGene[1] = end;
 				genes.add(geneID, newGene);
 			}
+
 			Float[][] c2 = new Float[c.length + 1][0];
 			for (int i = 0; i < c.length; i++) {
 				c2[i] = c[i];
@@ -648,6 +681,10 @@ public class NEAT {
 					float[] gene = genes.get(geneIndex);
 					int startIndex = (int) gene[0];
 					int endIndex = (int) gene[1];
+					if (startIndex > 3 || endIndex > 3) {
+						for (int i = 0; i < genes.size(); i++) {
+						}
+					}
 					state[endIndex] += oldState[startIndex] * weight;
 				}
 			}
@@ -681,7 +718,7 @@ public class NEAT {
 	 * @return the next usable ID number for genes
 	 */
 	public float getGeneID() {
-		return numGeneID++;
+		return genes.size();
 	}
 
 	/**
@@ -690,7 +727,7 @@ public class NEAT {
 	 * @return the next usable ID number for nodes
 	 */
 	public float getNodeID() {
-		return numNodeID++;
+		return nodes.size();
 	}
 
 	/**
