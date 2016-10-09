@@ -1,3 +1,4 @@
+package neuralnetworkgame;
 
 /**
  * Class used for NEAT calculations

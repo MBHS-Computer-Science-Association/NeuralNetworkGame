@@ -1,3 +1,4 @@
+package neuralnetworkgame;
 import java.util.List;
 
 public class Xor2 {
