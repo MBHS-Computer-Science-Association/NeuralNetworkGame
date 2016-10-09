@@ -65,6 +65,7 @@ public class alg {
 				break;
 			}
 			step++;
+		}
 		for (int i = 0; i < 20; i++) {
 			ax++;
 			array[ax][ay] = 1;

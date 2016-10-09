@@ -26,9 +26,9 @@ public class main extends JPanel {
 		alg a = new alg(ax, ay, bx, by);
 		a.bot();
 		while(a.bcheck()){
-			g.paintRect(ax,ay,1,1);
-			ax = a.getax;
-			ay = a.getay;
+			g.fillRect(ax,ay,1,1);
+			ax = a.getax();
+			ay = a.getay();
 		}
 	}
 
