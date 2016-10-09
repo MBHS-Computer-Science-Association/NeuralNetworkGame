@@ -1,0 +1,2 @@
+# Neural Network Game
+This aim of this project is to create a neural network based on Ken Stanley's paper in 2002 on [Evolving Neural Networks through Augmenting Topologies](http://nn.cs.utexas.edu/downloads/papers/stanley.ec02.pdf).
