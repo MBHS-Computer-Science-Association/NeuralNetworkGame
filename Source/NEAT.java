@@ -167,11 +167,15 @@ public class NEAT {
 		ArrayList<Float[][]> firstSpecies = new ArrayList<>();
 		for (int n = 0; n < populationSize; n++) {
 			Float[][] adamClone = new Float[adam.length][0];
-			for (int j = 0; j < adam.length; j++) {
+			adamClone[0] = new Float[adam[0].length];
+			for (int k = 0; k < adam[0].length; k++) {
+				adamClone[0][k] = adam[0][k];
+			}
+			for (int j = 1; j < adam.length; j++) {
 				adamClone[j] = new Float[adam[j].length];
-				for (int k = 0; k < adam[j].length; k++) {
-					adamClone[j][k] = adam[j][k];
-				}
+				adamClone[j][0] = adam[j][0];
+				adamClone[j][1] = randWeight();
+				adamClone[j][2] = adam[j][2];
 			}
 			firstSpecies.add(adamClone);
 		}
