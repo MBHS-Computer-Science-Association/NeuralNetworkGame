@@ -53,7 +53,7 @@ public class NEAT {
 	/**
 	 * The coefficients for the distance function
 	 */
-	float cE = 1f; // constant of excess genesdiscor
+	float cE = 1f; // constant of excess genes
 	float cD = 1f; // constant of disjointed genes
 	float cW = 0.4f; // constant of weights
 	final float cutoffN = 20; // max at which N round to 1
@@ -78,7 +78,7 @@ public class NEAT {
 	 * Constants used for managing reproduction
 	 */
 	public float weightMutationRate = 0.8f; // change one gene will mutate
-	public float newWeightRate = 0.1f; // change that the mutated gene will be
+	public float newWeightRate = 0.5f; // change that the mutated gene will be
 										// assigned a new value
 	public float weightChangeRate = 0.05f; // rate at which weights are changed
 	public float inheritedOfDisabledGeneActivated = 0.25f; // chance that an
@@ -110,7 +110,8 @@ public class NEAT {
 	/**
 	 * Used in calculating output
 	 */
-	int numTimeSteps = 5; // number of time steps useda
+	int numTimeSteps = 5; // number of time steps used
+	int maxTimeSteps = 10; // timeout for calculating output
 
 	int outputWidth = 1;
 	int inputWidth = 1;
@@ -322,8 +323,10 @@ public class NEAT {
 		for (int i = 0; i < speciesFitness.length; i++) {
 			sumFitness += speciesFitness[i];
 		}
+		int childrenNum = 0;
 		for (int i = 0; i < species.size(); i++) {
 			int numberOfChildren = (int) (speciesFitness[i] / sumFitness * populationSize);
+			childrenNum += numberOfChildren;
 			breedSpecies(species.get(i), numberOfChildren);
 		}
 		// TODO: Cross species reproduction
@@ -686,15 +689,76 @@ public class NEAT {
 					float[] gene = genes.get(geneIndex);
 					int startIndex = (int) gene[0];
 					int endIndex = (int) gene[1];
-					if (startIndex > 3 || endIndex > 3) {
-						for (int i = 0; i < genes.size(); i++) {
-						}
-					}
 					state[endIndex] += oldState[startIndex] * weight;
 				}
 			}
 			for (int i = inputWidth + 1; i < state.length; i++) {
 				state[i] = activation(state[i]);
+			}
+		}
+		for (int i = 0; i < outputWidth; i++) {
+			output[i] = state[1 + i + inputWidth];
+		}
+		return output;
+	}
+
+	/**
+	 * Returns output from network n
+	 * 
+	 * @param input
+	 *            Input to the network
+	 * @param n
+	 *            Network
+	 * @return Output from the network
+	 */
+	public float[] getOutput2(float[] input, Float[][] n) {
+		float[] output = new float[3];
+		int stateSize = 0;
+		for (int i = 1; i < n[0].length; i++) {
+			int node = n[0][i].intValue();
+			if (node > stateSize) {
+				stateSize = node;
+			}
+		}
+		float[] state = new float[stateSize + 1];
+		float[] oldState = new float[stateSize + 1];
+		// input is 0 indexed, state is 1 indexed.
+		boolean outputsActivated = false;
+		int timeStepIndex = 0;
+		while (!outputsActivated) {
+			for (int i = 0; i < state.length; i++) {
+				oldState[i] = state[i];
+			}
+			// Assuming no activation to input neurons and reset of input each
+			// time
+			for (int i = 0; i < input.length; i++) {
+				state[i + 1] = input[i];
+			}
+			for (int g = 1; g < n.length; g++) {
+				int geneIndex = n[g][0].intValue();
+				float weight = n[g][1];
+				float isEnabled = n[g][2];
+				if (isEnabled == enabled) {
+					float[] gene = genes.get(geneIndex);
+					int startIndex = (int) gene[0];
+					int endIndex = (int) gene[1];
+					if (oldState[startIndex] != 0) {
+						state[endIndex] += oldState[startIndex] * weight;
+					}
+				}
+			}
+			for (int i = inputWidth + 1; i < state.length; i++) {
+				if (state[i] != 0 && state[i] != oldState[i]) {
+					state[i] = activation(state[i]);
+				}
+			}
+		
+			outputsActivated = true;
+			timeStepIndex++;
+			for (int i = 0; i < outputWidth; i++) {
+				if (state[1 + i + inputWidth] == 0 && timeStepIndex < maxTimeSteps) {
+					outputsActivated = false;
+				}
 			}
 		}
 		for (int i = 0; i < outputWidth; i++) {
