@@ -1,4 +1,5 @@
 package neuralnetworkgame;
+
 import java.util.List;
 
 public class Xor {
@@ -15,8 +16,10 @@ public class Xor {
 			float highestFitness = Float.MIN_VALUE;
 			highestI = -1;
 			highestJ = -1;
+			int popSize = 0;
 			for (int i = 0; i < species.size(); i++) {
 				List<Float[][]> s = species.get(i);
+				popSize += s.size();
 				for (int j = 0; j < s.size(); j++) {
 					Float[][] net = s.get(j);
 					float err = 0;
@@ -38,7 +41,7 @@ public class Xor {
 					input[0] = 1;
 					input[1] = 1;
 					err += Math.abs(n.getOutput(input, net)[0] - 0);
-					float fitness = 5 - err;
+					float fitness = 10 - err;
 					if (fitness > highestFitness) {
 						highestFitness = fitness;
 						highestI = i;
@@ -48,7 +51,7 @@ public class Xor {
 				}
 			}
 			System.out.println(g + ": " + highestFitness);
-			if (highestFitness > 4.9f) {
+			if (highestFitness > 9.7f) {
 				break found;
 			}
 		}
